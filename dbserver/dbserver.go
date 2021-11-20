@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"github.com/capotej/groupcache-db-experiment/api"
 	"github.com/capotej/groupcache-db-experiment/slowdb"
-	"net"
 	"net/http"
 	"net/rpc"
 )
@@ -14,6 +13,8 @@ import (
 type Server struct {
 	db *slowdb.SlowDB
 }
+
+// RPC func type: func (t *T) MethodName(argType T1, replyType *T2) error
 
 func (s *Server) Get(args *api.Load, reply *api.ValueResult) error {
 	data := s.db.Get(args.Key)
@@ -36,14 +37,16 @@ func NewServer(db *slowdb.SlowDB) *Server {
 func (s *Server) Start(port string) {
 
 	rpc.Register(s)
-
 	rpc.HandleHTTP()
+
+	/*
 	l, e := net.Listen("tcp", port)
 	if e != nil {
 		fmt.Println("fatal")
 	}
+	 */
 
-	http.Serve(l, nil)
+	http.ListenAndServe(":8080", nil)
 }
 
 func main() {

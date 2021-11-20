@@ -3,6 +3,7 @@ package main
 // This represents a cache front end server, that front slowdb/slowserver requests
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"github.com/capotej/groupcache-db-experiment/api"
@@ -13,6 +14,7 @@ import (
 	"net/rpc"
 	"os"
 	"strconv"
+	"time"
 )
 
 type Frontend struct {
@@ -21,8 +23,11 @@ type Frontend struct {
 
 func (s *Frontend) Get(args *api.Load, reply *api.ValueResult) error {
 	var data []byte
+	// try to hit cache
 	fmt.Printf("cli asked for %s from groupcache\n", args.Key)
-	err := s.cacheGroup.Get(nil, args.Key,
+	ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond*500)
+	defer cancel()
+	err := s.cacheGroup.Get(ctx, args.Key,
 		groupcache.AllocatingByteSliceSink(&data))
 
 	reply.Value = string(data)
@@ -59,6 +64,7 @@ func main() {
 
 	var stringcache = groupcache.NewGroup("SlowDBCache", 64<<20, groupcache.GetterFunc(
 		func(ctx groupcache.Context, key string, dest groupcache.Sink) error {
+			// miss cache
 			result := client.Get(key)
 			fmt.Printf("asking for %s from dbserver\n", key)
 			dest.SetBytes([]byte(result))

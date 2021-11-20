@@ -23,7 +23,10 @@ func (db *SlowDB) Set(key string, value string) {
 }
 
 func NewSlowDB() *SlowDB {
-	ndb := new(SlowDB)
-	ndb.data = make(map[string]string)
+	ndb := &SlowDB{
+		data: make(map[string]string),
+	}
+	// ndb := new(SlowDB)
+	// ndb.data = make(map[string]string)
 	return ndb
 }
